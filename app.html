@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix Movie Recommendation System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .movie-list {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            padding: 0;
+        }
+
+        .movie-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .movie-item:hover {
+            background: #f5f5f5;
+        }
+
+        .movie-item:last-child {
+            border-bottom: none;
+        }
+
+        .movie-item.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .movie-item-name {
+            flex: 1;
+        }
+
+        .select-button {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.3s;
+        }
+
+        .movie-item.active .select-button {
+            background: #f0f0f0;
+            color: #667eea;
+        }
+
+        .select-button:hover {
+            background: #764ba2;
+        }
+
+        .recommendations {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .recommendations h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .recommendation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .recommendation-item {
+            padding: 15px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s;
+        }
+
+        .recommendation-item:hover {
+            transform: translateX(5px);
+        }
+
+        .recommendation-item p {
+            color: #333;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-box .number {
+            font-size: 2em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .stat-box .label {
+            color: #666;
+            margin-top: 5px;
+            font-size: 0.95em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #c33;
+            margin: 10px 0;
+        }
+
+        .message {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .no-movies-notice {
+            padding: 20px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            color: #856404;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .scrollbar-custom {
+            scrollbar-width: thin;
+            scrollbar-color: #667eea #f1f1f1;
+        }
+
+        .scrollbar-custom::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollbar-custom::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .scrollbar-custom::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Movie Recommendation Engine</h1>
+            <p>Find movies similar to your favorites</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div class="number" id="totalMovies">0</div>
+                <div class="label">Total Movies</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="selectedCount">0</div>
+                <div class="label">Selected Movie</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="recommendCount">0</div>
+                <div class="label">Recommendations</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <h2>🎥 Select a Movie</h2>
+                <div class="search-box">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Search movies..." 
+                        autocomplete="off"
+                    >
+                    <button onclick="loadMovies()">Refresh</button>
+                </div>
+                <div id="movieListContainer">
+                    <div class="message">Loading movies...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>⭐ Recommended Movies</h2>
+                <div id="recommendationsContainer">
+                    <div class="message">Select a movie to see recommendations</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allMovies = [];
+        let selectedMovie = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMovies();
+            
+            // Add search functionality
+            document.getElementById('searchInput').addEventListener('input', filterMovies);
+        });
+
+        // Load all movies from API
+        async function loadMovies() {
+            try {
+                const movieListContainer = document.getElementById('movieListContainer');
+                movieListContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Loading movies...</div>';
+
+                const response = await fetch('http://localhost:8000/movies');
+                const data = await response.json();
+                
+                allMovies = data.movies;
+                document.getElementById('totalMovies').textContent = data.count;
+                
+                displayMovies(allMovies);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('movieListContainer').innerHTML = 
+                    `<div class="error">❌ Failed to load movies. Make sure the API is running at http://localhost:8000</div>`;
+            }
+        }
+
+        // Display movies in list
+        function displayMovies(movies) {
+            const container = document.getElementById('movieListContainer');
+            
+            if (movies.length === 0) {
+                container.innerHTML = '<div class="message">No movies found</div>';
+                return;
+            }
+
+            const movieList = document.createElement('div');
+            movieList.className = 'movie-list scrollbar-custom';
+
+            movies.forEach((movie, index) => {
+                const movieItem = document.createElement('div');
+                movieItem.className = 'movie-item';
+                if (selectedMovie === movie) {
+                    movieItem.classList.add('active');
+                }
+
+                movieItem.innerHTML = `
+                    <span class="movie-item-name">${index + 1}. ${movie}</span>
+                    <button class="select-button" onclick="selectMovie('${movie.replace(/'/g, "\\'")}')">
+                        Select
+                    </button>
+                `;
+
+                movieList.appendChild(movieItem);
+            });
+
+            container.innerHTML = '';
+            container.appendChild(movieList);
+        }
+
+        // Filter movies based on search
+        function filterMovies() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allMovies.filter(movie => 
+                movie.toLowerCase().includes(searchTerm)
+            );
+            displayMovies(filtered);
+        }
+
+        // Select a movie and get recommendations
+        async function selectMovie(movieTitle) {
+            selectedMovie = movieTitle;
+            document.getElementById('selectedCount').textContent = '1';
+
+            // Highlight selected movie
+            displayMovies(document.getElementById('searchInput').value ? 
+                allMovies.filter(m => m.toLowerCase().includes(document.getElementById('searchInput').value.toLowerCase())) :
+                allMovies
+            );
+
+            // Get recommendations
+            await getRecommendations(movieTitle);
+        }
+
+        // Get recommendations from API
+        async function getRecommendations(movieTitle) {
+            try {
+                const container = document.getElementById('recommendationsContainer');
+                container.innerHTML = '<div class="loading"><div class="spinner"></div>Finding similar movies...</div>';
+
+                const url = `http://localhost:8000/recommend/${encodeURIComponent(movieTitle)}?num_recommendations=5`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error('Movie not found');
+                }
+
+                const data = await response.json();
+                displayRecommendations(data);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('recommendationsContainer').innerHTML = 
+                    `<div class="error">❌ ${error.message}. Try another movie!</div>`;
+                document.getElementById('recommendCount').textContent = '0';
+            }
+        }
+
+        // Display recommendations
+        function displayRecommendations(data) {
+            const container = document.getElementById('recommendationsContainer');
+            const movies = data.recommendations;
+
+            document.getElementById('recommendCount').textContent = movies.length;
+
+            const html = `
+                <div style="margin-bottom: 15px; padding: 10px; background: #e3f2fd; border-radius: 8px;">
+                    <strong>Movies similar to "${data.movie}":</strong>
+                </div>
+                <div class="recommendation-list">
+                    ${movies.map((movie, index) => `
+                        <div class="recommendation-item">
+                            <p>✓ ${index + 1}. ${movie}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Optional: Auto-load movies on interval (keeps data fresh)
+        setInterval(() => {
+            if (document.hidden) return; // Don't load if page is hidden
+        }, 30000);
+    </script>
+</body>
+</html>
