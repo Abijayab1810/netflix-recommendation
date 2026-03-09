@@ -378,7 +378,7 @@
                 const movieListContainer = document.getElementById('movieListContainer');
                 movieListContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Loading movies...</div>';
 
-                const response = await fetch('http://localhost:8000/movies');
+                const response = await fetch(`${window.location.origin}/movies`);
                 const data = await response.json();
                 
                 allMovies = data.movies;
@@ -388,7 +388,7 @@
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('movieListContainer').innerHTML = 
-                    `<div class="error">❌ Failed to load movies. Make sure the API is running at http://localhost:8000</div>`;
+                    `<div class="error">❌ Failed to load movies. Check your internet connection or try refreshing.</div>`;
             }
         }
 
@@ -455,7 +455,7 @@
                 const container = document.getElementById('recommendationsContainer');
                 container.innerHTML = '<div class="loading"><div class="spinner"></div>Finding similar movies...</div>';
 
-                const url = `http://localhost:8000/recommend/${encodeURIComponent(movieTitle)}?num_recommendations=5`;
+                const url = `${window.location.origin}/recommend/${encodeURIComponent(movieTitle)}?num_recommendations=5`;
                 const response = await fetch(url);
 
                 if (!response.ok) {
