@@ -27,8 +27,6 @@ COPY app.html .
 COPY models.zip .
 RUN unzip models.zip && rm models.zip
 
-COPY netflix.ipynb .
-
 # Expose port
 EXPOSE 8000
 
